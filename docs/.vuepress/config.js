@@ -21,9 +21,7 @@ module.exports = ctx => ({
   ],
   theme: '@vuepress/vue',
   themeConfig: {
-    repo: 'vuejs/vuepress',
     editLinks: true,
-    docsDir: 'packages/docs/docs',
     algolia: ctx.isProd ? ({
       apiKey: '3a539aab83105f01761a137c61004d85',
       indexName: 'vuepress'
@@ -37,11 +35,12 @@ module.exports = ctx => ({
         ariaLabel: '选择语言',
         editLinkText: '在 GitHub 上编辑此页',
         lastUpdated: '上次更新',
-        nav: require('./nav/zh'),
+        nav: require('./nav/index.js'),
         sidebar: {
           '/api/': getApiSidebar(),
           '/guide/': getGuideSidebar('指南', '深入'),
           '/plugin/': getPluginSidebar('插件', '介绍', '官方插件'),
+          '/build-tools/': getToolsSidebar(''),
           '/theme/': getThemeSidebar('主题', '介绍')
         }
       }
@@ -70,8 +69,6 @@ module.exports = ctx => ({
     ['flowchart']
   ],
   extraWatchFiles: [
-    '.vuepress/nav/en.js',
-    '.vuepress/nav/.js'
   ]
 })
 
@@ -80,6 +77,19 @@ function getApiSidebar () {
     'cli',
     'node'
   ]
+}
+
+function getToolsSidebar () {
+    return [
+        {
+            title: '构建工具',
+            collapsable: true,
+            sidebarDepth: 2,
+            children: [
+              'webpack',
+            ]
+          }
+    ]
 }
 
 function getGuideSidebar (groupA, groupB) {
