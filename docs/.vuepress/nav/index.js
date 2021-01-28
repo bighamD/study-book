@@ -17,13 +17,17 @@ module.exports = [
   },
   {
     text: '构建工具',
-    // link: '/build-tools/',
-    items:[
-      {
-        text: 'Webpack',
-        link: '/build-tools/webpack'
-      }
-    ]
+    link: '/build-tools/',
+    // items:[
+    //   {
+    //     text: 'Webpack',
+    //     link: '/build-tools/webpack/'
+    //   },
+    //   {
+    //     text: 'Webpack热更新',
+    //     link: '/build-tools/webpack-hot-reload/'
+    //   }
+    // ]
   },
   // {
   //   text: '了解更多',

@@ -83,10 +83,11 @@ function getToolsSidebar () {
     return [
         {
             title: '构建工具',
-            collapsable: true,
-            sidebarDepth: 2,
+            collapsable: false,
+            // sidebarDepth: 2,
             children: [
               'webpack',
+              'webpack-hot-reload'
             ]
           }
     ]
