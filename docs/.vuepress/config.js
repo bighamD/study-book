@@ -19,7 +19,7 @@ module.exports = ctx => ({
     ['meta', { name: 'msapplication-TileImage', content: '/icons/msapplication-icon-144x144.png' }],
     ['meta', { name: 'msapplication-TileColor', content: '#000000' }]
   ],
-  theme: '@vuepress/vue',
+  theme: '@vuepress/theme-defalut',
   themeConfig: {
     editLinks: true,
     algolia: ctx.isProd ? ({
