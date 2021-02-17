@@ -4,8 +4,8 @@ module.exports = ctx => ({
   locales: {
     '/': {
       lang: 'zh-CN',
-      title: 'VuePress',
-      description: 'Vue 驱动的静态网站生成器'
+      title: 'Study Book',
+      description: 'Math.pow(1.01, 365), \n每天学习多一点点'
     }
   },
   head: [
@@ -37,6 +37,16 @@ module.exports = ctx => ({
         lastUpdated: '上次更新',
         nav: require('./nav/index.js'),
         sidebar: {
+          '/js-basics/': [
+            {
+              title: 'javaScript',
+              sidebarDepth: 3,
+              children: [
+                ['', '基础'],
+                'es6'
+              ]
+            }
+          ],
           '/api/': getApiSidebar(),
           '/guide/': getGuideSidebar('指南', '深入'),
           '/plugin/': getPluginSidebar('插件', '介绍', '官方插件'),
@@ -72,28 +82,30 @@ module.exports = ctx => ({
   ]
 })
 
-function getApiSidebar () {
+function getApiSidebar() {
   return [
     'cli',
     'node'
   ]
 }
 
-function getToolsSidebar () {
-    return [
-        {
-            title: '构建工具',
-            collapsable: false,
-            // sidebarDepth: 2,
-            children: [
-              'webpack',
-              'webpack-hot-reload'
-            ]
-          }
-    ]
+
+
+function getToolsSidebar() {
+  return [
+    {
+      title: '构建工具',
+      collapsable: false,
+      // sidebarDepth: 2,
+      children: [
+        ['', 'webpack'],
+        'webpack-hot-reload'
+      ]
+    }
+  ]
 }
 
-function getGuideSidebar (groupA, groupB) {
+function getGuideSidebar(groupA, groupB) {
   return [
     {
       title: groupA,
@@ -127,7 +139,7 @@ const officalPlugins = fs
   .map(filename => 'official/' + filename.slice(0, -3))
   .sort()
 
-function getPluginSidebar (pluginTitle, pluginIntro, officialPluginTitle) {
+function getPluginSidebar(pluginTitle, pluginIntro, officialPluginTitle) {
   return [
     {
       title: pluginTitle,
@@ -149,7 +161,7 @@ function getPluginSidebar (pluginTitle, pluginIntro, officialPluginTitle) {
   ]
 }
 
-function getThemeSidebar (groupA, introductionA) {
+function getThemeSidebar(groupA, introductionA) {
   return [
     {
       title: groupA,

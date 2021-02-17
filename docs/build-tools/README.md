@@ -1,20 +1,6 @@
----
-title: Webpack
-date: 2020-11-19T08:04:24.984Z
-permalink: /build-tools/webpack
-categories:
-    - 工具链
-tags:
-    - webpack
-author:
-    name: bigham
-lastmod: 2020-11-20 16:02:51
-slug: webpack
----
-
 # webpack
 ## 什么是webpack
-`webapck` 本质上是一个打包工具, 当`webpack` 处理应用程序时，它会递归地构建一个依赖关系图(dependency graph)，其中包含应用程序需要的每个模块，然后将所有这些模块打包成一个或多个 `bundle`,
+`webapck` 是一个模块打包工具, 当`webpack` 处理应用程序时，它会递归地构建一个依赖关系图(dependency graph)，其中包含应用程序需要的每个模块，然后将所有这些模块打包成一个或多个 `bundle`,
 并且提供多种运行环境的代码,比如代码可以在浏览器执行或者 `node`环境执行。
 
 下面是 `webpack` 打包各种资源 (图片、css、js) 的一个概念图:

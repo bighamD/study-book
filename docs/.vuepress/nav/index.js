@@ -1,5 +1,9 @@
 module.exports = [
   {
+    text: 'javaScript',
+    link: '/js-basics/'
+  },
+  {
     text: '配置',
     link: '/config/'
   },
@@ -16,18 +20,18 @@ module.exports = [
     link: '/theme/'
   },
   {
-    text: '构建工具',
+    text: '构建',
     link: '/build-tools/',
-    items:[
-      {
-        text: 'Webpack',
-        link: '/build-tools/webpack/'
-      },
-      {
-        text: 'Webpack热更新',
-        link: '/build-tools/webpack-hot-reload/'
-      }
-    ]
+    // items:[
+    //   {
+    //     text: 'Webpack',
+    //     link: '/build-tools/webpack/'
+    //   },
+    //   {
+    //     text: 'Webpack热更新',
+    //     link: '/build-tools/webpack-hot-reload/'
+    //   }
+    // ]
   },
   // {
   //   text: '了解更多',
