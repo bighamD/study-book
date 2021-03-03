@@ -198,3 +198,350 @@ function changeName() {
 }
 ```
 上面的 `tens` 和 `changeName`运行起来没有报错，我们知道通过`const` 声明的变量是不能被重写的，如果是按照引用传递的明显就说不通了
+
+## 原始值包装类型
+```js
+const str = 'qiuqiu';
+const str2 = str.slice(3); // qiu
+```
+我们知道原始值比如字符串、数字、布尔值不是对象，理论上应该是没有其他属性的，但是上面的例子`str`变量却有`slice`方法,
+这是因为每当用到某个原始值的方法或属性时，js引擎都会创建一个相应原始包装类型的对象，从而暴露出操作原始值的各种方法。具体来说，当第二行访问`str`的时候，
+是以只读模式访问的，以只读模式访问的时候，js都会做以下三个工作：
+- 创建一个String类型的实例
+- 调用实例上面特定的方法
+- 销毁实例（垃圾回收）
+
+```js
+// 当上面第二行读取str的值时, 可以把上面理解为如下
+let _temp_str = new String('qiuqiu'); // 创建一个临时的包装对象，对象上有String实例的所有方法
+const str2 = _temp_str.slice(3); // 调用实例slice方法并返回
+_temp_str = null; // 销毁实例
+
+```
+### 为什么无法给原始值添加属性？
+来看下下面的代码,试图给`str`添加新属性和重写`slice`，但是都没有生效
+```js
+let qiuqiu = 'qiuqiu';
+qiuqiu.age = 25;
+console.log(qiuqiu.age); // undefined
+
+qiuqiu.silce = 1234;
+cosnole.log(qiuqiu.slice); // ƒ slice() { [native code] }, 并不是1234
+```
+为什么上面的代码赋值语和重写都没有生效呢？ 用上面说的当访问原始值属性的时候，js会做上面说的三件事，上面的代码可以解析成如下：
+```js
+let qiuqiu = 'qiuqiu';
+// qiuqiu.age = 25; 可以视为下面三行代码
+let _temp = new String('qiuqiu');
+_temp.age = 25;
+_temp = null;
+// console.log(qiuqiu.age) 等于下面代码；
+let _temp2 = new String('qiuqiu');
+console.log(_temp2.age); // 因为String.prototype没有age这个属性所以是undefined
+_temp2 = null;
+
+
+// qiuqiu.slice = 1234; 等价于
+let _temp3 = new String('qiuqiu');
+_temp3.slice = 1234;
+_temp3 = null;
+// console.log(qiuqiu.slice); 等价于
+let _temp4 = new String('qiuqiu');
+console.log(_temp4.slice); // 因为String.prototype上有slice方法，所以输出ƒ slice() { [native code] }
+_temp4 = null; // 立刻销毁
+```
+从上面可以看出，自动创建的包装类型临时对象的生命周期很特殊，只存在于访问它的那行代码执行期间，然后立刻销毁，所以我们不能在运行时给原始值添加属性和方法。
+如果想要添加额外的属性或重写属性和方法，应该在`String.prototype`上修改。同理`Boolean`、`Number` 和 `String`类型的原始值都是不能在运行时给原始值添加属性和方法。
+
+## 原型链
+:::tip 定义
+当访问一个对象的某个属性时，会先在这个对象本身属性上查找，如果没有找到，则会去它的__proto__隐式原型上查找，即它的构造函数的prototype，如果还没有找到就会再在构造函数的prototype的__proto__中查找，这样一层一层向上查找就会形成一个链式结构，我们称为原型链
+:::
+![原型链](./proto.png)
+
+上面的原型链图片很好的解析了`__proto__` 、 `prototype`和`constructor`的关系, 需要注意的是`function`也是一个对象，可以通过`new Function()`方式创建(不建议这样做)，所以也有
+`__proto__`属性。当访问引用类型的属性时，会在原型链上找，并遵循就近原则。
+:::tip
+对象的原型是对象，数组的原型是数组，函数的原型是函数
+:::
+```js
+typeof ({}).__proto__ === 'object'; // true
+Array.isArray([].__proto__); // true
+typeof (function fn () {}) === 'function'; //true
+```
+如果实例上跟原型上的方法相同，如果想要调用某个原型上的重名方法可以使用`call`或者`apply`
+```js
+let obj = {};
+obj.toString = function () {
+    return JSON.stringify(this)
+}
+obj.toString(); // "{}"
+// 如果想调用原型上的toString, 只要找到某个构造器的prototype的方法调用，比如要调用Object的toString
+Object.prototype.toString.call(obj); // "[object Object]
+
+let arr = [1, 2, 3];
+let join = arr.join;
+arr.join = function () {
+    return join.call(this, '+')
+}
+arr.join(); // '1+2+3'
+// 想要调用数组原型的join
+Array.prototype.join.call(arr); // '1,2,3'
+```
+## for-in
+`for-in`语法可以遍历实例上和原型链上可枚举`enumerable`为`true`的属性, `Object.keys()`只能遍历实例上可以枚举属性, 跟
+`hasOwnProperty()`方法是相似的
+```js
+let Person = function () {
+    this.name = 'teemo';
+    this.age = 33;
+}
+Person.prototype.getName = function () {
+    return this.name;
+}
+
+var p = new Person();
+
+// 新增不可枚举属性sex
+Object.defineProperty(p, 'sex', {
+    enumerable: false, // 是否可枚举
+    wirtable: true, // 是否能重写
+    configurable: true, // 是否能使用delete删除，是否能重新使用defineProperty配置单
+    value: 'male'
+})
+
+for(var key in p) { // 实例属性或者原型可以被枚举的属性都会返回, 因为sex是不可枚举，所以只有三个
+    console.log(key);
+    // 'name'
+    // 'age'
+    // 'getName'
+}
+Object.keys(p); // ['name', 'age'] 只会返回实例可枚举的属性
+
+// 如果想用for-in遍历实例可枚举的属性，可以通过hasOwnProperty判断
+for (var key in p) {
+    if (Object.hasOwnProperty.call(p, key)) {
+        // do something
+    }
+}
+```
+想要知道对象属性的访问器配置对象，可以使用`Object.getOwnPropertyDescriptors(p)`来查看
+![访问器](./descriptors.png)
+## 对象继承
+- 原型继承
+- 借用构造函数
+- 组合继承
+- 原型式继承
+- 寄生式继承
+- 寄生组合式继承
+
+### 原型继承
+```js
+function Super() {
+    this.list = [1,2,3];
+}
+Super.prototype.getList = function () {
+    return this.list;
+}
+
+function Sub () {};
+Sub.prototype = new Super(); // 原型继承
+let sub = new Sub();
+
+console.log(sub.list); // [1,2,3]
+console.llog(sub.getList()); // [1,2,3]
+```
+上面通过重写`Sub.prototype`原型为`Super`实例，来继承`Super`上原型和实例的方法。这种方式的问题有两个：
+- 原型实现继承时，Sub原型实际上变成了另一个Super实例, 如果原型属性中包含引用值，引用值会在所有实例间共享问题
+- 子类Sub在实例化时不能给父类Super构造函数传参
+```js
+// 修改sub的list
+sub.list.push(4); 
+console.log(list); // [1,2,3,4]
+let sub2 = new Sub();
+console.log(sub2.list); // [1, 2, 3, 4] 因为list属性是引用类型，每个实例共享
+```
+### 借用构造函数继承
+```js
+function Super(name) {
+    this.name = name;
+}
+Super.prototype.getName = function () {
+    return this.name;
+}
+
+function Sub (age, ...args) {
+    // 可以添加额外的属性
+    this.age = age;
+    Super.call(this, ...args)
+}
+let sub = new Sub(33, 'teemo');
+
+console.log(sub.name); // 'teemo'
+console.log(sub.getName()); // 报错，sub.getName是undefined
+```
+在`Sub`子类构造器中直接调用父类`Super`构再起, 并传入`this`, 这就是借用构造函数继承实现。这种方式有两种问题：
+- 主要缺点，也是使用构造函数模式自定义类型的问题:必须在构造函数中定义方法，因此函数不能重用
+- 子类Sub的实例也不能访问父类Super原型上定义的属性, prototype定义的无法继承
+### 组合继承
+组合继承就是结合上面的原型继承和借用构造函数的方式，将两者的优点集中了起来。基 本的思路是使用原型链继承原型上的属性和方法，而通过盗用构造函数继承实例属性。这样既可以把方法定义在原型上以实现重用，又可以让每个实例都有自己的属性。来看下面的例子:
+```js
+function Super(name) {
+    this.name = name;
+    this.color = ['bule', 'red'];
+}
+Super.prototype.getName = function () {
+    return this.name;
+}
+
+function Sub (age, ...args) {
+    // 可以添加额外的属性
+    this.age = age;
+    // 继承父类构造器属性, colors变成了每个实例自有属性
+    Super.call(this, ...args)
+}
+// 继承父类原型定义的方法getName
+Sub.prototype = new Super();
+
+let sub = new Sub(33, 'teemo');
+sub.color.push('black');
+console.log(sub.name); // 'teemo'
+console.log(sub.getName()); // 'teemo'
+sub.constructor === Sub; // false
+
+let sub2 = new Sub(28, 'bigham');
+console.log(sub.name); // 'teemo'
+console.log(sub.getName()); // 'bigham'
+console.log(sub.colors); // ['bule', 'red'];
+
+```
+在这个例子中，`Super` 构造函数定义了两个属性，name 和 colors，而它的原型上也定义了 一个方法叫 `sayName()`。`Sub` 构造函数调用了 `Super` 构造函数，传入了 name 参数，然后又定义了自己的属性age。此外，`Sub.prototype` 也被赋值为 `Super` 的实例。原型赋值之后， 又在这个原型上添加了新方法 sayAge()。这样，就可以创建两个 `Sub` 实例，让这两个实例都有 自己的属性，包括 colors，同时还共享相同的方法。组合继承弥补了原型链和借用构造函数的不足，而且组合继承也保留了 `instanceof` 操作符和 `isPrototypeOf()`方法识别合成对象的能力。
+```js
+sub instanceof Sub; // true
+Sub.prototype.isPrototypeOf(sub); // true
+```
+### 原型式继承
+原型式继承的实现可以参考`ES6`中的`Object.create()`，实际上就是创建一个空对象，设置他的`__proto__`是要继承的父类原型并返回。
+```js
+function Super() {};
+Super.prototype.sayHi = function () {
+    console.log('hi');
+}
+
+let o2 = Object.create(Super.prototype);
+o2.sayHi(); // 'hi'
+```
+上面的`o2`这样就继承了Super的原型，使用ES5方式实现`Object.create`:
+```js
+function myObjectCreate(o) {
+    function F() { };
+    F.prototype = o; 
+    return new F();
+}
+// myObjectCreate等价于下面，只是不建议这种直接操作__proto__的方式
+/**
+ function myObjectCreate(o) {
+     let obj = {};
+     obj.__proto__ = o;
+     return obj;
+}
+*/
+
+let obj = {
+    name: 'teemo',
+    getName() {
+        return this.name;
+    }
+}
+let o2 = myObjectCreate(obj);
+o2.name; // ‘teemo‘
+o2.getName(); // 'teemo'
+```
+可以看出这种方式还是通过改写原型来实现继承，所有还是会出现属性是引用类型时，出现实例共享的问题，只是`ES6`把它作为一个标准化API。
+它的好处就是不需要单独创建构造函数, 直接一个普通函数`myObjectCreate`。
+
+### 寄生式继承
+寄生式继承跟原型式很像，创建一个实现继承的函数，以某种方式增强对象，然后返回这个对象。基本的寄生继承模式如下:
+```js
+let obj = {
+    name: 'teemo',
+    getName() {
+        return this.name;
+    }
+}
+
+function extendsObject(o, age) {
+    let obj = myObjectCreate(o); // 原型式继承
+    obj.age = age;
+    return obj;
+}
+let o2 = extendsObject(obj, 33)
+o2.name; // ‘teemo‘
+o2.getName(); // 'teemo'
+o2.age; // 33
+```
+这种方式的好处就是不用创建构造函数，可以通过`extendsObject`添加新的属性，这种方式的缺点跟原型继承一样，会出现属性是引用类型时，出现实例共享的问题，而且函数无法复用。
+
+### 寄生式组合继承
+之前说的组合继承应该是比较好的方式，但是他有两个问题：
+- sub.construtor并没有指向Sub
+- 会两次调用Super函数，存在问题效率
+```js
+function Super(name) {
+    this.name = name;
+    this.color = ['bule', 'red'];
+}
+Super.prototype.getName = function () {
+    return this.name;
+}
+
+function Sub (age, ...args) {
+    // 可以添加额外的属性
+    this.age = age;
+    // 继承父类构造器属性, colors变成了每个实例自有属性
+    Super.call(this, ...args) // 第一次调用Super函数
+}
+// 设置Sub的圆形为Super的实例，这样prototype上面也会有name、color和getName方法
+// 但是因为Super.call(this, ...args)，Sub实例也会有name、color属性，他会遮蔽原型上同名的属性
+// 因为对象属性的读取规则就是实例能找到，就不会忘原型链向上找
+
+Sub.prototype = new Super(); // 第二次调用Super函数
+
+let sub = new Sub(33, 'teemo');
+```
+`sub`对象:
+![sub](./sub-object.png)
+
+上面会sub出现两次color和name属性，一是在实例上，二是在的原型上，这样的重复定义存在一定的效率问题。一个比较好的处理方法就是，不使用`new Super()`给`Sub.prototype`设置原型，而是取得父类原型的一个副本(通过`Object.create`这种方式)。说到底就是使用寄生式继承来继承父类原型，然后将返回的新对象赋值给子类原型。
+具体实现如下：
+```js
+function inheritPrototype(Sub, Super) {
+    let prototype = myObjectCreate(Super.prototype); // 也可以使用ES6中的Object.create
+    prototype.constructor = Sub; // 使Sub实例的constructor属性能正确指向Sub
+    Sub.prototype = prototype; // 继承Super.prototype的副本
+}
+```
+寄生式组合继承最终方案：
+```js
+function Super(name) {
+    this.name = name;
+    this.color = ['bule', 'red'];
+}
+Super.prototype.getName = function () {
+    return this.name;
+}
+
+function Sub (age, ...args) {
+    this.age = age;
+    Super.call(this, ...args);
+}
+inheritPrototype(Sub, Super);
+
+Sub.prototype.getAge = function () {
+    return this.age;
+}
+let sub = new Sub(33, 'teemo');
+```
+`sub`对象：
+![sub](./sub-proto.png)
+可以看出不会出现两次重名的属性，而且`Super`只调用了一次，效率问题就不用担心，这个便是寄生式组合继承。
