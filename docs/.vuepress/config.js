@@ -47,6 +47,15 @@ module.exports = ctx => ({
               ]
             }
           ],
+          '/framework/': [
+            {
+              title: 'framework',
+              sidebarDepth: 3,
+              children: [
+                ['', 'Vue'],
+              ]
+            }
+          ],
           '/api/': getApiSidebar(),
           '/guide/': getGuideSidebar('指南', '深入'),
           '/plugin/': getPluginSidebar('插件', '介绍', '官方插件'),

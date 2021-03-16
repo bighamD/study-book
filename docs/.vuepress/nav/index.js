@@ -4,6 +4,10 @@ module.exports = [
     link: '/js-basics/'
   },
   {
+    text: 'framework',
+    link: '/framework/'
+  },
+  {
     text: '配置',
     link: '/config/'
   },

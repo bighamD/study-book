@@ -57,6 +57,10 @@ if (0.1 + 0.2) { // 永远都为false 0.1+0.2=0.300 000 000 000 000 04
 这里检测两个数值之和是否等于 0.3。如果两个数值分别是 0.05 和 0.25，或者 0.15 和 0.15，那没问题，因此在计算小数的时候，为了避免精度偏差，可以转为整数，然后除于倍数
 ```js
 (0.1 * 10 + 0.2 * 10) / 10; // 0.3
+// 千分位正则
+const reg1 = /(?=\B)(?=(\d{3})+$)/g;
+// 或者
+const reg2 = /(?=(?!\b)(\d{3})+$)/g;
 ```
 #### NaN & Infinity
 `NaN` 和 `Infinity`, 都是`number`类型, 需要注意的是，NaN 和任何number类型做运算结果都是NaN，且NaN不等于NaN
@@ -545,3 +549,33 @@ let sub = new Sub(33, 'teemo');
 `sub`对象：
 ![sub](./sub-proto.png)
 可以看出不会出现两次重名的属性，而且`Super`只调用了一次，效率问题就不用担心，这个便是寄生式组合继承。
+
+## 事件
+### 事件委托
+过多事件处理程序的解决方案是使用事件委托。事件委托利用事件冒泡，可以只使用一个事件处理程序来管理一种类型的事件。例如，`click` 事件冒泡到 `document`。这意味着可以为整个页面指定一个 `onclick` 事件处理程序，而不用为每个可点击元素分别指定事件处理程序。有如下结构, 点击每个`li`的时候打印`li`中内容，可以使用事件委托
+```html
+<ul id="myLinks">
+      <li id="goSomewhere">Go somewhere</li>
+      <li id="doSomething">Do something</li>
+      <li id="sayHi">Say hi</li>
+      ...
+</ul>
+```
+上面的结构通常的做法是给每个`li`个绑定事件
+```js
+let item1 = document.getElementById("doSomething");
+item1.addEventListener("click", (event) => {
+    console.log(event.innerText);
+});
+```
+使用事件委托
+```js
+let list = document.getElementById("myLinks");
+list.addEventListener("click", (event) => { 
+    let target = event.target;
+    if (target.id === 'doSomething') {
+        console.log(target.innerText);
+    }
+})
+```
+这样只需要给父元素`ul`绑定一个事件，相比较给每个`li`绑定事件性能好很多，越多的绑定事件就会越占用内存。
